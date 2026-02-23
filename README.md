@@ -18,17 +18,14 @@ campus_security_model/
 │   └── campus_security_model.ipynb ← Jupyter Notebook (recommended)
 │
 ├── src/
-│   ├── step1_preprocess.py         ← Data loading & cleaning
-│   ├── step2_eda.py                ← Charts & visualizations
-│   ├── step3_model.py              ← Model training & prescriptions
-│   └── step4_report.py            ← PDF report generator
+│   ├── preprocess.py         ← Data loading & cleaning
+│   ├── model.py              ← Model training & prescriptions
 │
 ├── outputs/
-│   ├── plots/                      ← All 12 generated charts
 │   ├── models/                     ← Saved trained model
 │   └── reports/                    ← Final PDF report
 │
-├── run_all.py                      ← ONE-CLICK: runs entire pipeline
+├── main.py                      ← ONE-CLICK: runs entire pipeline
 ├── requirements.txt                ← Python dependencies
 └── README.md                       ← This file
 ```
