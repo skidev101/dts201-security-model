@@ -3,9 +3,9 @@ import os
 
 
 
-KAGGLE_DATA_PATH = "../data/raw/crime_data.csv"
-SURVEY_DATA_PATH = "../data/raw/survey_data.csv"  # google form data
-OUTPUT_PATH      = "../data/processed/merged_data.csv"
+KAGGLE_DATA_PATH = "data/raw/crime_data.csv"
+SURVEY_DATA_PATH = "data/raw/survey_data.csv"  # google form data
+OUTPUT_PATH      = "data/processed/merged_data.csv"
 
 CAMPUS_PREMISES = [
     "SCHOOL INTERIOR", "SCHOOL EXTERIOR", "COLLEGE/UNIVERSITY",
@@ -91,7 +91,7 @@ def preprocess(df):
         else:
             return "OTHER"
 
-    crime_col = next((c for c in ["CRM_CD_DESC", "CRIME_DESC", "OFFENSE"] if c in campus_df.columns), None)
+    crime_col = next((c for c in ["crm_cd_desc", "crime_desc", "offense"] if c in campus_df.columns), None)
     if crime_col:
         campus_df["CRIME_CATEGORY"] = campus_df[crime_col].apply(map_crime_category)
     else:
@@ -112,6 +112,12 @@ def preprocess(df):
     # ── Risk flag (target variable for model) ──
     campus_df["HIGH_RISK"] = (campus_df["SEVERITY_SCORE"] >= 2).astype(int)
 
+    print("\nCrime category distribution:")
+    print(campus_df["CRIME_CATEGORY"].value_counts())
+
+    print("\nHIGH_RISK distribution:")
+    print(campus_df["HIGH_RISK"].value_counts())
+
     print(f"  Data preprocessed: {len(campus_df):,} records, {campus_df['CRIME_CATEGORY'].nunique()} crime categories")
     return campus_df
 
@@ -120,14 +126,14 @@ def preprocess(df):
 
 # MAIN
 def run():
-    os.makedirs("../data/processed", exist_ok=True)
+    os.makedirs("data/processed", exist_ok=True)
 
     kaggle_raw = load_dataset(KAGGLE_DATA_PATH)
     kaggle_clean = preprocess(kaggle_raw)
 
 
     # Save both
-    kaggle_clean.to_csv("../data/processed/kaggle_clean.csv", index=False)
+    kaggle_clean.to_csv("data/processed/kaggle_clean.csv", index=False)
 
     print("\n STEP 1 COMPLETE!")
     print(f"   Kaggle: {len(kaggle_clean):,} records → data/processed/kaggle_clean.csv")

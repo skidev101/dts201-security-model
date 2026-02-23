@@ -66,7 +66,7 @@ PRESCRIPTIONS = {
 }
 
 def load_data():
-    df = pd.read_csv("../data/processed/kaggle_clean.csv", low_memory=False)
+    df = pd.read_csv("data/processed/kaggle_clean.csv", low_memory=False)
     return df
 
 def prepare_features(df):
@@ -101,9 +101,7 @@ def prepare_features(df):
     if "IS_CAMPUS_SPECIFIC" in df.columns:
         features.append("IS_CAMPUS_SPECIFIC")
 
-    # Severity (as a supporting feature)
-    if "SEVERITY_SCORE" in df.columns:
-        features.append("SEVERITY_SCORE")
+    
 
     features = [f for f in features if f in df.columns]
     X = df[features].fillna(0)
@@ -116,6 +114,9 @@ def prepare_features(df):
 def train_model(X, y):
     """Train a Random Forest with cross-validation."""
     print("🌲 Training Random Forest classifier...")
+
+    if y.nunique() < 2:
+        raise ValueError("Target variable has only one class. Check preprocessing.")
 
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=42, stratify=y
