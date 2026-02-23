@@ -1,26 +1,17 @@
-"""
-STEP 3: Model Training — Prescriptive Risk Classification Model
-===============================================================
-Trains a Random Forest classifier to predict HIGH_RISK incidents,
-then derives prescriptive rules from feature importances.
-
-The prescriptive output answers: WHAT SHOULD BE DONE to reduce campus crime?
-"""
+import pickle
 
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+# import seaborn as sns
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import (
     classification_report, confusion_matrix, roc_auc_score,
     ConfusionMatrixDisplay, roc_curve
 )
-import pickle
-import os, warnings
-warnings.filterwarnings("ignore")
+import os
+import matplotlib.pyplot as plt
 
 PLOT_DIR  = "../outputs/plots"
 MODEL_DIR = "../outputs/models"
@@ -37,7 +28,7 @@ PRESCRIPTIONS = {
         "🔒 Install CCTV cameras at parking lots, campus gates, and lecture hall corridors",
         "💡 Improve lighting in poorly lit areas (hostels, parking, shortcuts)",
         "🎒 Run 'Don't Leave Valuables Unattended' awareness campaigns",
-        "🛡️  Deploy security at peak theft hours (7–9 AM, 12–2 PM, 5–7 PM)",
+        "🛡️  Deploy security at peak theft hours (7-9 AM, 12-2 PM, 5-7 PM)",
     ],
     "ASSAULT/VIOLENCE": [
         "🚨 Install emergency call points / panic buttons at strategic locations",
@@ -64,7 +55,7 @@ PRESCRIPTIONS = {
         "💊 Provide drug counseling and rehabilitation referrals for students",
     ],
     "HIGH_RISK_TIME_NIGHT": [
-        "🌃 Increase patrols between 8 PM – 2 AM (peak high-risk window)",
+        "🌃 Increase patrols between 8 PM - 2 AM (peak high-risk window)",
         "🔦 Ensure all campus pathways are adequately lit at night",
         "🚌 Provide safe late-night shuttle transport between hostels and key buildings",
     ],
@@ -74,11 +65,9 @@ PRESCRIPTIONS = {
     ],
 }
 
-
 def load_data():
     df = pd.read_csv("../data/processed/kaggle_clean.csv", low_memory=False)
     return df
-
 
 def prepare_features(df):
     """Select and encode features for the classifier."""
@@ -295,9 +284,9 @@ def run():
     # Save model
     with open(f"{MODEL_DIR}/campus_security_model.pkl", "wb") as f:
         pickle.dump({"model": model, "features": features, "rules": rules}, f)
-    print(f"\n💾 Model saved to outputs/models/campus_security_model.pkl")
+    print("Model saved to outputs/models/campus_security_model.pkl")
 
-    print(f"\n✅ STEP 3 COMPLETE! ROC-AUC = {roc:.4f}")
+    print(f"\n STEP 3 COMPLETE! ROC-AUC = {roc:.4f}")
     return model, rules, roc
 
 
