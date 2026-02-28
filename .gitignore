@@ -1,2 +1,11 @@
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environments (if you use them)
 .venv/
+env/
+venv/
 data/

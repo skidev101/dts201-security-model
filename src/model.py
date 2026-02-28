@@ -13,10 +13,15 @@ from sklearn.metrics import (
 import os
 import matplotlib.pyplot as plt
 
-PLOT_DIR  = "../outputs/plots"
-MODEL_DIR = "../outputs/models"
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
+
+MODEL_DIR = os.path.join(PROJECT_ROOT, "outputs", "models")
+PLOT_DIR  = os.path.join(PROJECT_ROOT, "outputs", "plots")
 os.makedirs(PLOT_DIR, exist_ok=True)
 os.makedirs(MODEL_DIR, exist_ok=True)
+
+print(f"Targeting Model Directory: {MODEL_DIR}")
 
 # ─────────────────────────────────────────────
 # PRESCRIPTIVE RULES
@@ -74,41 +79,47 @@ def prepare_features(df):
     features = []
 
     # Time features
-    if "HOUR" in df.columns:
-        df["HOUR_SIN"] = np.sin(2 * np.pi * df["HOUR"] / 24)
-        df["HOUR_COS"] = np.cos(2 * np.pi * df["HOUR"] / 24)
-        features += ["HOUR", "HOUR_SIN", "HOUR_COS"]
+    if "hour" in df.columns:
+        df["hour_sin"] = np.sin(2 * np.pi * df["hour"] / 24)
+        df["hour_cos"] = np.cos(2 * np.pi * df["hour"] / 24)
+        features += ["hour", "hour_sin", "hour_cos"]
 
-    if "IS_WEEKEND" in df.columns:
-        features.append("IS_WEEKEND")
+    if "is_weekend" in df.columns:
+        features.append("is_weekend")
+
+    # Add coordinates if available
+    if "lat" in df.columns and "lon" in df.columns:
+        df["lat"] = pd.to_numeric(df["lat"], errors="coerce").fillna(0)
+        df["lon"] = pd.to_numeric(df["lon"], errors="coerce").fillna(0)
+        features += ["lat", "lon"]
 
     # Crime category (encoded)
-    le = LabelEncoder()
-    if "CRIME_CATEGORY" in df.columns:
-        df["CRIME_CAT_ENC"] = le.fit_transform(df["CRIME_CATEGORY"].fillna("OTHER"))
-        features.append("CRIME_CAT_ENC")
-        category_encoder = le
-    else:
-        category_encoder = None
+    # le = LabelEncoder()
+    # if "CRIME_CATEGORY" in df.columns:
+    #     df["CRIME_CAT_ENC"] = le.fit_transform(df["CRIME_CATEGORY"].fillna("OTHER"))
+    #     features.append("CRIME_CAT_ENC")
+    #     category_encoder = le
+    # else:
+    #     category_encoder = None
 
     # Victim age
-    if "VICT_AGE" in df.columns:
-        df["VICT_AGE"] = pd.to_numeric(df["VICT_AGE"], errors="coerce").fillna(df.get("VICT_AGE", pd.Series()).median())
-        df["VICT_AGE"] = df["VICT_AGE"].clip(0, 100)
-        features.append("VICT_AGE")
+    if "vict_age" in df.columns:
+        df["vict_age"] = pd.to_numeric(df["vict_age"], errors="coerce").fillna(df.get("vict_age", pd.Series()).median())
+        df["vict_age"] = df["vict_age"].clip(0, 100)
+        features.append("vict_age")
 
     # Campus-specific flag
-    if "IS_CAMPUS_SPECIFIC" in df.columns:
-        features.append("IS_CAMPUS_SPECIFIC")
+    if "is_campus_specific" in df.columns:
+        features.append("is_campus_specific")
 
     
 
     features = [f for f in features if f in df.columns]
     X = df[features].fillna(0)
-    y = df["HIGH_RISK"].fillna(0).astype(int)
+    y = df["high_risk"].fillna(0).astype(int)
 
     print(f"   Features used: {features}")
-    return X, y, features, category_encoder
+    return X, y, features, None
 
 
 def train_model(X, y):
@@ -200,9 +211,9 @@ def generate_prescriptive_rules(df, model, features):
     rules = []
 
     # Rule 1: Most dangerous crime category
-    if "CRIME_CATEGORY" in df.columns:
-        top_crime = df.groupby("CRIME_CATEGORY")["HIGH_RISK"].mean().idxmax()
-        crime_rate = df.groupby("CRIME_CATEGORY")["HIGH_RISK"].mean().max()
+    if "crime_category" in df.columns:
+        top_crime = df.groupby("crime_category")["high_risk"].mean().idxmax()
+        crime_rate = df.groupby("crime_category")["high_risk"].mean().max()
         rules.append({
             "finding": f"'{top_crime}' has the highest risk rate ({crime_rate*100:.1f}%)",
             "priority": "HIGH",
@@ -210,8 +221,8 @@ def generate_prescriptive_rules(df, model, features):
         })
 
     # Rule 2: Peak risk hours
-    if "HOUR" in df.columns:
-        hourly_risk = df.groupby("HOUR")["HIGH_RISK"].mean()
+    if "hour" in df.columns:
+        hourly_risk = df.groupby("hour")["high_risk"].mean()
         peak_hours = hourly_risk[hourly_risk > hourly_risk.quantile(0.75)].index.tolist()
         hour_fmt = ", ".join([f"{h}:00" for h in sorted(peak_hours)])
         rules.append({
@@ -221,9 +232,9 @@ def generate_prescriptive_rules(df, model, features):
         })
 
     # Rule 3: Weekend risk
-    if "IS_WEEKEND" in df.columns:
-        weekday_risk = df[df["IS_WEEKEND"]==0]["HIGH_RISK"].mean()
-        weekend_risk = df[df["IS_WEEKEND"]==1]["HIGH_RISK"].mean()
+    if "is_weekend" in df.columns:
+        weekday_risk = df[df["is_weekend"]==0]["high_risk"].mean()
+        weekend_risk = df[df["is_weekend"]==1]["high_risk"].mean()
         if weekend_risk > weekday_risk * 1.1:
             rules.append({
                 "finding": f"Weekend risk ({weekend_risk*100:.1f}%) is higher than weekday risk ({weekday_risk*100:.1f}%)",
@@ -232,8 +243,8 @@ def generate_prescriptive_rules(df, model, features):
             })
 
     # Rule 4: Top crime types with prescriptions
-    if "CRIME_CATEGORY" in df.columns:
-        crime_counts = df["CRIME_CATEGORY"].value_counts().head(3)
+    if "crime_category" in df.columns:
+        crime_counts = df["crime_category"].value_counts().head(3)
         for crime, count in crime_counts.items():
             if crime in PRESCRIPTIONS:
                 rules.append({
@@ -284,7 +295,7 @@ def run():
 
     # Save model
     with open(f"{MODEL_DIR}/campus_security_model.pkl", "wb") as f:
-        pickle.dump({"model": model, "features": features, "rules": rules}, f)
+        pickle.dump({"model": model, "features": features, "rules": rules, "prescriptions": PRESCRIPTIONS}, f)
     print("Model saved to outputs/models/campus_security_model.pkl")
 
     print(f"\n STEP 3 COMPLETE! ROC-AUC = {roc:.4f}")
