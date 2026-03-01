@@ -51,11 +51,11 @@ def generate_security_report(hour, is_weekend, lat, lon, vict_age=20):
     print("="*50)
     print("🛡️  CAMPUS SECURITY PRESCRIPTIVE REPORT")
     print("="*50)
-    print(f"📍 Location:  ({lat}, {lon})")
-    print(f"⏰ Time:      {hour:02d}:00 {'(Weekend)' if is_weekend else '(Weekday)'}")
-    print(f"📊 Risk Score: {risk_prob*100:.1f}% -> {risk_level}")
+    print(f" Location:  ({lat}, {lon})")
+    print(f" Time:      {hour:02d}:00 {'(Weekend)' if is_weekend else '(Weekday)'}")
+    print(f" Risk Score: {risk_prob*100:.1f}% -> {risk_level}")
     print("-" * 50)
-    print("📋 RECOMMENDED ACTIONS:")
+    print(" RECOMMENDED ACTIONS:")
 
     if risk_level == "🔴 HIGH RISK":
         # Night-specific logic
@@ -69,8 +69,8 @@ def generate_security_report(hour, is_weekend, lat, lon, vict_age=20):
         for p in prescriptions["ASSAULT/VIOLENCE"][:1]:
             print(f"  {p}")
     else:
-        print("  ✅ Routine patrols sufficient.")
-        print("  💡 Maintain standard 'See Something, Say Something' visibility.")
+        print("  - Routine patrols sufficient.")
+        print("  - Maintain standard 'See Something, Say Something' visibility.")
     
     print("="*50)
 
