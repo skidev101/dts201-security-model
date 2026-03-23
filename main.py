@@ -44,6 +44,24 @@ if __name__ == "__main__":
   def live_mode():
       print("\n💡 Entering Live Mode. Type 'exit' at any time to quit.")
       
+      # Load bounds if available to show the user
+      MODEL_PATH = "outputs/models/campus_security_model.pkl"
+      bounds = None
+      if os.path.exists(MODEL_PATH):
+          import pickle
+          with open(MODEL_PATH, "rb") as f:
+              bundle = pickle.load(f)
+              bounds = bundle.get("bounds")
+      
+      if bounds:
+          print(f"📍 Active Campus Boundary:")
+          print(f"   Latitude:  {bounds['lat_min']} to {bounds['lat_max']}")
+          print(f"   Longitude: {bounds['lon_min']} to {bounds['lon_max']}")
+      else:
+          print("📍 Default Campus Boundary (UCLA):")
+          print("   Latitude:  34.06 to 34.08")
+          print("   Longitude: -118.46 to -118.43")
+
       while True:
           print("\n--- NEW ASSESSMENT ---")
           user_input = input("Enter hour (0-23) or 'exit': ").strip().lower()
@@ -56,12 +74,10 @@ if __name__ == "__main__":
               day_type = input("Is it a weekend? (y/n): ").strip().lower()
               is_weekend = True if day_type == 'y' else False
               
-              # You can either ask for lat/lon or use campus defaults
-              # Example defaults for a specific campus (e.g., UCLA area)
-              lat = float(input("Enter Latitude (or 34.07 for Campus Center): ") or 34.07)
-              lon = float(input("Enter Longitude (or -118.44 for Campus Center): ") or -118.44)
+              lat = float(input("Enter Latitude: ") or 34.07)
+              lon = float(input("Enter Longitude: ") or -118.44)
               
-              # Run the prescriptive engine
+              # Run the prescriptive engine (it handles the validation internally now)
               generate_security_report(hour, is_weekend, lat, lon)
               
           except ValueError:

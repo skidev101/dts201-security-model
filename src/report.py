@@ -23,8 +23,20 @@ def generate_security_report(hour, is_weekend, lat, lon, vict_age=20):
         model = bundle["model"]
         features = bundle["features"]
         prescriptions = bundle["prescriptions"]
+        bounds = bundle.get("bounds", {
+            "lat_min": 34.06, "lat_max": 34.08,
+            "lon_min": -118.46, "lon_max": -118.43
+        })
 
-    # 1. Feature Engineering (Must match training logic exactly)
+    # 1. Coordinate Validation
+    if not (bounds["lat_min"] <= lat <= bounds["lat_max"] and 
+            bounds["lon_min"] <= lon <= bounds["lon_max"]):
+        print(f"⚠️  ERROR: Location ({lat}, {lon}) is outside the modeled campus boundaries.")
+        print(f"   Campus Boundary: Lat [{bounds['lat_min']}, {bounds['lat_max']}], Lon [{bounds['lon_min']}, {bounds['lon_max']}]")
+        print("   Assessment restricted to campus areas only.")
+        return
+
+    # 2. Feature Engineering (Must match training logic exactly)
     hour_sin = np.sin(2 * np.pi * hour / 24)
     hour_cos = np.cos(2 * np.pi * hour / 24)
     

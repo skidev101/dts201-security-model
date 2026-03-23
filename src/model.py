@@ -294,8 +294,22 @@ def run():
     plot_prescriptive_summary(rules)
 
     # Save model
+    campus_df = df[df["is_campus_specific"] == 1]
+    bounds = {
+        "lat_min": campus_df["lat"].min() if not campus_df.empty else 34.06,
+        "lat_max": campus_df["lat"].max() if not campus_df.empty else 34.08,
+        "lon_min": campus_df["lon"].min() if not campus_df.empty else -118.46,
+        "lon_max": campus_df["lon"].max() if not campus_df.empty else -118.43,
+    }
+
     with open(f"{MODEL_DIR}/campus_security_model.pkl", "wb") as f:
-        pickle.dump({"model": model, "features": features, "rules": rules, "prescriptions": PRESCRIPTIONS}, f)
+        pickle.dump({
+            "model": model, 
+            "features": features, 
+            "rules": rules, 
+            "prescriptions": PRESCRIPTIONS,
+            "bounds": bounds
+        }, f)
     print("Model saved to outputs/models/campus_security_model.pkl")
 
     print(f"\n STEP 3 COMPLETE! ROC-AUC = {roc:.4f}")
